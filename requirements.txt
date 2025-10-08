@@ -6,3 +6,5 @@ numpy>=2.0
 gunicorn>=21,<22
 statsmodels>=0.14.4,<0.16
 scipy>=1.14.1
+Flask-Caching>=2.3.0
+redis>=5.0.0
