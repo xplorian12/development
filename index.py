@@ -206,10 +206,12 @@ def line_with_loess(df, x_order_col, y_col, y_title, is_pct=False):
     _, y_sm = loess_line(y, np.arange(len(df)), 0.5)
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=x_labels, y=y, mode="lines+markers", name=y_col))
-    fig.add_trace(go.Scatter(x=x_labels, y=y_sm, mode="lines", name="LOESS", line=dict(dash="dot")))
+    fig.add_trace(go.Scattergl(x=x_labels, y=y, mode="lines+markers", name=y_col))
+    fig.add_trace(go.Scattergl(x=x_labels, y=y_sm, mode="lines", name="LOESS", line=dict(dash="dot")))
     fig.update_layout(
-        margin=dict(l=16,r=8,t=6,b=24), yaxis_title=y_title, xaxis_title=None,
+        uirevision="city",  # <- prevents full re-layout on updates
+        margin=dict(l=16,r=8,t=6,b=24),
+        yaxis_title=y_title, xaxis_title=None,
         template="plotly_white",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         height=240
@@ -535,6 +537,7 @@ def update_quarterly(city, tab):
 
 def update_permits_acs(city):
     if city == "SUMMARY":
+        raise PreventUpdate
         def blank():
             fig = go.Figure(); fig.update_layout(template="plotly_white", margin=dict(l=16,r=8,t=6,b=24), height=240)
             fig.update_xaxes(visible=False); fig.update_yaxes(visible=False)
@@ -551,6 +554,7 @@ def update_permits_acs(city):
 @app.callback(Output("p11","figure"), Output("p12","figure"), Input("city","value"))
 def update_crime(city):
     if city == "SUMMARY":
+        raise PreventUpdate
         def blank():
             fig = go.Figure(); fig.update_layout(template="plotly_white", margin=dict(l=16,r=8,t=6,b=24), height=240)
             fig.update_xaxes(visible=False); fig.update_yaxes(visible=False)
@@ -577,6 +581,7 @@ def update_crime(city):
 @app.callback(Output("p13","figure"), Output("p14","figure"), Output("p15","figure"), Input("city","value"))
 def update_demo(city):
     if city == "SUMMARY":
+        raise PreventUpdate
         def blank():
             fig = go.Figure(); fig.update_layout(template="plotly_white", margin=dict(l=16,r=8,t=6,b=24), height=240)
             fig.update_xaxes(visible=False); fig.update_yaxes(visible=False)
@@ -626,6 +631,7 @@ def update_demo(city):
 @app.callback(Output("leaflet_map","children"), Input("city","value"))
 def update_map(city):
     if city == "SUMMARY":
+        raise PreventUpdate
         return html.Div()
 
     df = mf_map[mf_map["CITY_KEY"] == city].copy()
@@ -688,5 +694,4 @@ def update_map(city):
 
 # ------------------ Main ------------------
 if __name__ == "__main__":
-    print("Open: http://127.0.0.1:8050")
-    app.run(host="127.0.0.1", port=int(os.environ.get("PORT", 8050)), debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8050)), debug=False)
