@@ -9,6 +9,65 @@ import plotly.express as px
 import dash_leaflet as dl
 from pandas.api.types import CategoricalDtype
 
+
+# --- NORMALIZATION + GUARDS -----------------------------------------------
+from dash.exceptions import PreventUpdate
+
+def _normalize_place_ts(df):
+    """Ensure place_ts has a 'year' column."""
+    if df is None or len(df) == 0:
+        return df
+    cols = {c.lower(): c for c in df.columns}
+    if 'year' not in df.columns:
+        if 'data_year' in cols:
+            df = df.rename(columns={cols['data_year']: 'year'})
+        elif 'date' in cols:
+            # derive year from a Date column if present
+            dname = cols['date']
+            df = df.assign(year=pd.to_datetime(df[dname], errors='coerce').dt.year)
+        elif 'yr' in cols:
+            df = df.rename(columns={cols['yr']: 'year'})
+        # else: leave as-is; downstream guard will PreventUpdate
+    return df
+
+def _normalize_quarterly(df):
+    """
+    Make sure the quarterly dataframe has expected names:
+    SP, LP, DOM, X..of.Units, dollar_per_sqft, dollar_per_unit, period_label
+    """
+    if df is None or len(df) == 0:
+        return df
+
+    rename_map = {}
+    # common alternates -> canonical
+    for alt, canon in [
+        ('median_SP', 'SP'), ('Median_SP', 'SP'), ('sp', 'SP'),
+        ('median_LP', 'LP'), ('lp', 'LP'),
+        ('median_DOM', 'DOM'), ('dom', 'DOM'),
+        ('Units', 'X..of.Units'), ('units', 'X..of.Units'), ('num_units', 'X..of.Units'),
+        ('$/sqft', 'dollar_per_sqft'), ('dollar_sqft', 'dollar_per_sqft'),
+        ('$/unit', 'dollar_per_unit'), ('dollar_unit', 'dollar_per_unit'),
+        ('period', 'period_label'), ('quarter_label', 'period_label')
+    ]:
+        if alt in df.columns and canon not in df.columns:
+            rename_map[alt] = canon
+
+    if rename_map:
+        df = df.rename(columns=rename_map)
+
+    return df
+
+def _require_columns(df, needed, ctx=""):
+    """Raise PreventUpdate if dataframe is missing columns."""
+    missing = [c for c in needed if c not in df.columns]
+    if missing:
+        # Helpful logging in Render logs
+        print(f"[WARN] {ctx}: missing columns {missing}. Available: {list(df.columns)}")
+        raise PreventUpdate
+# --------------------------------------------------------------------------
+
+
+
 DATA_DIR = "data/processed"
 
 def _read(name):
@@ -418,8 +477,10 @@ def update_permits_acs(city):
         return blank(), blank(), blank(), blank()
     d7 = permits[permits["CITY_KEY"] == city].sort_values("Year")
     f7 = bar_series(d7, "Year", "total_permits", "Total permits")
-    d8 = place_ts[place_ts["CITY_KEY"] == city].sort_values("year")
-    f8 = line_with_loess(d8, "year", "median_hh_income", "Median household income")
+    d8 = place_ts[place_ts["CITY_KEY"] == city]
+    d8 = _normalize_place_ts(d8)
+    _require_columns(d8, ["year"], ctx="update_permits_acs/place_ts")
+    d8 = d8.sort_values("year")
     f9 = line_with_loess(d8, "year", "population", "Population")
     f10 = line_with_loess(d8, "year", "vacancy_rate_pct", "Vacancy rate (%)", is_pct=True)
     return f7, f8, f9, f10
@@ -440,7 +501,10 @@ def update_crime(city):
         fig.update_xaxes(visible=False); fig.update_yaxes(visible=False)
         fig.update_layout(template="plotly_white", margin=dict(l=16,r=8,t=6,b=24), height=240)
         return fig, f12
-    pop = place_ts[place_ts["CITY_KEY"] == city][["year","population"]].rename(columns={"year":"data_year"})
+    pop = place_ts[place_ts["CITY_KEY"] == city]
+    pop = _normalize_place_ts(pop)
+    _require_columns(pop, ["year", "population"], ctx="update_crime/place_ts")
+    pop = pop[["year", "population"]].rename(columns={"year": "data_year"})
     d = d.merge(pop, on="data_year", how="left")
     d["value"] = np.where((d["Total"].notna()) & (d["population"].notna()) & (d["population"]>0),
                           100000.0 * d["Total"] / d["population"], np.nan)
