@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import dash_leaflet as dl
 from pandas.api.types import CategoricalDtype
+from dash import State
 
 DISCLAIMER_1 = "Disclaimer: This report is provided for informational purposes only and is not intended as investment, legal, or tax advice. All data (including income, population, and eviction filings) are derived from third-party sources such as the U.S. Census Bureau, the Anti-Eviction Mapping Project, and the Los Angeles Superior Court, and are believed to be reliable but not guaranteed. Readers should verify all information independently before making any real estate or financial decisions. Past trends do not guarantee future performance."
 DISCLAIMER_2 = "Based on information from Vesta Plus MLS as of November 25, 2024. All data, including all measurements and calculations of area, is obtained from various sources and has not been, and will not be, verified by broker or MLS. All information should be independently reviewed and verified for accuracy."
@@ -482,30 +483,31 @@ def update_city_note(city, tab_value):
     Output("p1","figure"), Output("p1_2","figure"), Output("p2","figure"),
     Output("p3","figure"), Output("p4","figure"), Output("p5","figure"),
     Output("p6","figure"), Output("pL1","figure"), Output("pL2","figure"),
-    Input("city","value")
+    Input("city","value"), Input("tabs","value")
 )
-def update_quarterly(city):
-    if city == "SUMMARY":
-        def blank():
-            fig = go.Figure()
-            fig.update_layout(template="plotly_white", margin=dict(l=16,r=8,t=6,b=24), height=240)
-            fig.update_xaxes(visible=False); fig.update_yaxes(visible=False)
-            return fig
-        return tuple(blank() for _ in range(9))
-    df = qtr[qtr["CITY_KEY"] == city].sort_values(["period_index"]).copy()
+def update_quarterly(city, tab):
+    # only compute when a real city is selected AND the Prices tab is visible
+    if city == "SUMMARY" or tab != "prices_tab":
+        raise PreventUpdate
+
+    df = qtr[qtr["CITY_KEY"] == city].copy()  # (sorted once at load; see note below)
     f1   = line_with_loess(df, "period_label", "SP", "Median Sale Price (SP)")
     f1_2 = line_with_loess(df, "period_label", "count", "Sale Count")
     f2   = line_with_loess(df, "period_label", "DOM", "Median DOM")
     f3   = line_with_loess(df, "period_label", "Cap_Rate_Pct", "Median Cap Rate (%)", is_pct=True)
+
+    # if you precompute these at load (recommended), you can drop the if-blocks
     if "dollar_per_unit" not in df.columns:
         df["dollar_per_unit"] = df["SP"] / df.get("X..of.Units", 1)
     f4   = line_with_loess(df, "period_label", "dollar_per_unit", "Median $ per Unit")
+
     if "price_diff" not in df.columns:
         df["price_diff"] = df["LP"] - df["SP"]
     f5   = line_with_loess(df, "period_label", "price_diff", "LP − SP")
+
     f6   = line_with_loess(df, "period_label", "GRM", "Median GRM")
 
-    dlq  = lease_qtr[lease_qtr["CITY_KEY"] == city].sort_values(["period_index"]).copy()
+    dlq  = lease_qtr[lease_qtr["CITY_KEY"] == city].copy()
     fL1  = line_with_loess(dlq, "period_label", "median_LP", "Median Lease Price (LP)")
     fL2  = line_with_loess(dlq, "period_label", "median_DOM_lease", "Median Lease DOM")
     return f1, f1_2, f2, f3, f4, f5, f6, fL1, fL2
