@@ -1,0 +1,172 @@
+/* Make dropdown selected text visible */
+.Select-value-label, .Select-placeholder {
+    color: #111 !important;
+}
+
+
+/* Force Dash Dropdown (react-select) value text to be visible */
+.Select-control { 
+  background-color: #fff !important;
+  border-color: #ddd !important;
+  min-height: 34px;
+  font-size: 13px;
+}
+
+/* Selected value + placeholder colors */
+.Select--single > .Select-control .Select-value,
+.Select-placeholder,
+.Select--single > .Select-control .Select-value .Select-value-label {
+  color: #111 !important;
+}
+
+/* Input text while typing */
+.Select-input > input {
+  color: #111 !important;
+}
+
+/* Dropdown menu text */
+.Select-menu-outer, .Select-option {
+  color: #111 !important;
+  background: #fff !important;
+}
+
+/* Hover/selected option colors for clarity */
+.Select-option.is-focused { background: #f2f2f2 !important; }
+.Select-option.is-selected { background: #e9ecef !important; }
+
+
+
+
+
+
+/* --- City dropdown — make selected/placeholder visible --- */
+.city-dd .Select-control {
+  background-color: #fff !important;
+  border-color: #ddd !important;
+  min-height: 34px;
+  font-size: 13px;
+  color: #111 !important;
+}
+
+/* Old react-select (v1) class names */
+.city-dd .Select--single > .Select-control .Select-value,
+.city-dd .Select--single > .Select-control .Select-value .Select-value-label,
+.city-dd .Select-placeholder,
+.city-dd .Select-input > input {
+  color: #111 !important;
+}
+
+/* Newer react-select (v3/v5) class names */
+.city-dd .css-1uccc91-singleValue,        /* selected value */
+.city-dd .css-qc6sy-singleValue,
+.city-dd .css-1wa3eu0-placeholder,        /* placeholder */
+.city-dd .css-1dimb5e-singleValue {
+  color: #111 !important;
+}
+
+/* Menu / options (old + new) */
+.city-dd .Select-menu-outer,
+.city-dd .Select-option,
+.city-dd .css-1nmdiq5-menu,
+.city-dd .css-1n7v3ny-option {
+  color: #111 !important;
+  background: #fff !important;
+}
+
+/* Hover/selected options */
+.city-dd .Select-option.is-focused { background: #f2f2f2 !important; }
+.city-dd .Select-option.is-selected { background: #e9ecef !important; }
+.city-dd .css-1n7v3ny-option:hover { background: #f2f2f2 !important; }
+
+/* Ensure the menu appears above Pico components */
+.city-dd { z-index: 10; }
+.city-dd .Select-menu-outer,
+.city-dd .css-1nmdiq5-menu {
+  z-index: 10000 !important;
+}
+
+
+/* Ensure the selected value is visible inside the city dropdown.
+   Covers old Select v1 and newer react-select classnames. */
+
+.city-dd .Select-control {
+  background: #fff !important;
+  border-color: #ddd !important;
+  min-height: 34px;
+  color: #111 !important;
+}
+
+/* Old (dcc Dropdown using Select v1) */
+.city-dd .Select--single > .Select-control .Select-value,
+.city-dd .Select--single > .Select-control .Select-value .Select-value-label,
+.city-dd .Select-placeholder,
+.city-dd .Select-input > input {
+  color: #111 !important;
+  opacity: 1 !important;         /* <- critical */
+}
+
+/* Some themes hide the value with opacity or transform */
+.city-dd .Select--single > .Select-control .Select-value {
+  display: block !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Newer react-select single value/placeholder */
+.city-dd [class*="singleValue"] {
+  color: #111 !important;
+  opacity: 1 !important;         /* <- critical */
+}
+.city-dd [class*="placeholder"] {
+  color: #666 !important;
+  opacity: 1 !important;
+}
+
+/* Don’t let external CSS make the text transparent */
+.city-dd,
+.city-dd * {
+  text-shadow: none !important;
+}
+
+/* Menu z-index so it’s not hidden behind other panes */
+.city-dd .Select-menu-outer,
+.city-dd [class*="menu"] {
+  z-index: 10000 !important;
+}
+
+
+/* Hide placeholder when the dropdown has a value (react-select v1) */
+.city-dd.has-value > .Select-control .Select-placeholder {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Make sure the actual value is on top */
+.city-dd .Select--single > .Select-control .Select-value {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+
+
+/* --- Global Plotly chart title styling --- */
+.js-plotly-plot .plotly .gtitle {
+  font-size: 55px !important;     /* bigger title text */
+  font-weight: 900 !important;    /* semi-bold */
+  fill: #222 !important;          /* title font color */
+  text-anchor: middle !important; /* keep centered */
+}
+
+/* --- Optional: Axis titles (x and y) --- */
+.js-plotly-plot .plotly .ytitle,
+.js-plotly-plot .plotly .xtitle {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  fill: #333 !important;
+}
+
+/* Optional: slightly tighter spacing for the chart area */
+.js-plotly-plot .plotly {
+  margin-top: 4px;
+}
