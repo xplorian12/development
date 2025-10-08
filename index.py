@@ -469,7 +469,6 @@ def update_quarterly(city):
     Output("p7","figure"), Output("p8","figure"), Output("p9","figure"), Output("p10","figure"),
     Input("city","value")
 )
-import plotly.graph_objects as go
 
 def update_permits_acs(city):
     if city == "SUMMARY":
