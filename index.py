@@ -9,7 +9,9 @@ import plotly.express as px
 import dash_leaflet as dl
 from pandas.api.types import CategoricalDtype
 
-
+DISCLAIMER_1 = "All data is provided as-is and may contain errors; do not rely solely on this dashboard for decisions."
+DISCLAIMER_2 = "Not investment, legal, or tax advice. Consult qualified professionals before acting."
+DRE_NUM      = "CA DRE #00xxxxxx"
 # --- NORMALIZATION + GUARDS -----------------------------------------------
 from dash.exceptions import PreventUpdate
 
@@ -303,6 +305,35 @@ header = html.Div(
     }
 )
 
+footer = html.Div(
+    [
+        html.Div(
+            [
+                html.Span(DISCLAIMER_1),
+                html.Span(" \u00b7 ", style={"margin": "0 6px"}),  # middot separator
+                html.Span(DISCLAIMER_2),
+                html.Span(" \u00b7 ", style={"margin": "0 6px"}),
+                html.Span(DRE_NUM, style={"fontWeight": "600"})
+            ],
+            style={
+                "textAlign": "center",
+                "opacity": "0.9",
+                "maxWidth": "1200px",
+                "margin": "0 auto",
+                "padding": "8px 12px",
+                "lineHeight": "1.4",
+                "fontSize": "12px"
+            }
+        )
+    ],
+    style={
+        "background": "#000",
+        "color": "#fff",
+        "padding": "6px 0"
+    }
+)
+
+
 # tiny helper: “card” with a compact title above each graph (Shiny-style)
 def titled_graph(id_, title_text):
     return html.Div([
@@ -381,13 +412,27 @@ tabs_for_cities = dcc.Tabs(id="tabs", value="prices_tab", children=[
 summary_page = html.Div([], style={"padding":"10px"})
 
 # Main content container switches between summary_page and tabs_for_cities
-app.layout = html.Div([
-    header,
-    html.Div([
-        sidebar,
-        html.Div(id="main_content", style={"flex":"1 1 auto","padding":"10px"})
-    ], style={"display":"flex","gap":"0","alignItems":"flex-start","justifyContent":"stretch","minHeight":"calc(100vh - 56px)"}),
-], style=GLOBAL_STYLE)
+app.layout = html.Div(
+    [
+        header,
+        html.Div(
+            [
+                sidebar,
+                html.Div(id="main_content", style={"flex": "1 1 auto", "padding": "10px"})
+            ],
+            style={
+                "display": "flex",
+                "gap": "0",
+                "alignItems": "flex-start",
+                "justifyContent": "stretch",
+                "flex": "1 1 auto"  # fills remaining height between header and footer
+            }
+        ),
+        footer
+    ],
+    style={**GLOBAL_STYLE, "display": "flex", "flexDirection": "column", "minHeight": "100vh"}
+)
+
 
 # Make Dash aware of both layouts to avoid "nonexistent object" errors at startup
 app.validation_layout = html.Div([app.layout, tabs_for_cities])
