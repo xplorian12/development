@@ -219,6 +219,7 @@ app = Dash(
     ],
     suppress_callback_exceptions=True
 )
+server = app.server
 app.title = "SB Dashboard"
 
 GLOBAL_STYLE = {"fontSize":"13px","--pico-font-size":"13px"}
