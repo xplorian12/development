@@ -3,3 +3,4 @@ dash-leaflet==1.0.15
 plotly==5.24.1
 pandas>=2.2.3,<2.3
 numpy>=2.0
+gunicorn>=21,<22
