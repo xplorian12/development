@@ -13,6 +13,7 @@ from pandas.api.types import CategoricalDtype
 # --- NORMALIZATION + GUARDS -----------------------------------------------
 from dash.exceptions import PreventUpdate
 
+
 def _normalize_place_ts(df):
     """Ensure place_ts has a 'year' column."""
     if df is None or len(df) == 0:
@@ -468,22 +469,64 @@ def update_quarterly(city):
     Output("p7","figure"), Output("p8","figure"), Output("p9","figure"), Output("p10","figure"),
     Input("city","value")
 )
+import plotly.graph_objects as go
+
+def _blank_fig(msg="No data"):
+    fig = go.Figure()
+    fig.update_layout(template="plotly_white",
+                      margin=dict(l=16, r=8, t=24, b=24),
+                      height=240,
+                      title=msg)
+    fig.update_xaxes(visible=False)
+    fig.update_yaxes(visible=False)
+    return fig
+
 def update_permits_acs(city):
+    # always initialize all four
+    f7 = _blank_fig()
+    f8 = _blank_fig()
+    f9 = _blank_fig()
+    f10 = _blank_fig()
+
     if city == "SUMMARY":
-        def blank():
-            fig = go.Figure(); fig.update_layout(template="plotly_white", margin=dict(l=16,r=8,t=6,b=24), height=240)
-            fig.update_xaxes(visible=False); fig.update_yaxes(visible=False)
-            return fig
-        return blank(), blank(), blank(), blank()
-    d7 = permits[permits["CITY_KEY"] == city].sort_values("Year")
-    f7 = bar_series(d7, "Year", "total_permits", "Total permits")
+        return f7, f8, f9, f10
+
+    # --- Permits (bar) ---
+    d7 = permits[permits["CITY_KEY"] == city]
+    try:
+        _require_columns(d7, ["Year", "total_permits"], ctx="update_permits_acs/permits")
+        d7 = d7.sort_values("Year")
+        if not d7.empty:
+            f7 = bar_series(d7, "Year", "total_permits", "Total permits")
+        else:
+            f7 = _blank_fig("No permits data")
+    except Exception as e:
+        f7 = _blank_fig(f"Permits error: {e}")
+
+    # --- ACS / place_ts (lines) ---
     d8 = place_ts[place_ts["CITY_KEY"] == city]
-    d8 = _normalize_place_ts(d8)
-    _require_columns(d8, ["year"], ctx="update_permits_acs/place_ts")
-    d8 = d8.sort_values("year")
-    f9 = line_with_loess(d8, "year", "population", "Population")
-    f10 = line_with_loess(d8, "year", "vacancy_rate_pct", "Vacancy rate (%)", is_pct=True)
+    try:
+        d8 = _normalize_place_ts(d8)
+        _require_columns(d8, ["year", "median_hh_income", "population", "vacancy_rate_pct"],
+                         ctx="update_permits_acs/place_ts")
+        d8 = d8.sort_values("year")
+        if not d8.empty:
+            # f8: income; f9: population; f10: vacancy rate
+            f8 = line_with_loess(d8, "year", "median_hh_income", "Median household income")
+            f9 = line_with_loess(d8, "year", "population", "Population")
+            f10 = line_with_loess(d8, "year", "vacancy_rate_pct", "Vacancy rate (%)", is_pct=True)
+        else:
+            f8 = _blank_fig("No ACS data")
+            f9 = _blank_fig("No ACS data")
+            f10 = _blank_fig("No ACS data")
+    except Exception as e:
+        # Keep the others as blanks but label the error to help debugging
+        f8 = _blank_fig(f"ACS error: {e}")
+        f9 = _blank_fig(f"ACS error: {e}")
+        f10 = _blank_fig(f"ACS error: {e}")
+
     return f7, f8, f9, f10
+
 
 @app.callback(Output("p11","figure"), Output("p12","figure"), Input("city","value"))
 def update_crime(city):
