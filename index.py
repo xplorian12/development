@@ -9,9 +9,9 @@ import plotly.express as px
 import dash_leaflet as dl
 from pandas.api.types import CategoricalDtype
 
-DISCLAIMER_1 = "All data is provided as-is and may contain errors; do not rely solely on this dashboard for decisions."
-DISCLAIMER_2 = "Not investment, legal, or tax advice. Consult qualified professionals before acting."
-DRE_NUM      = "CA DRE #00xxxxxx"
+DISCLAIMER_1 = "Disclaimer: This report is provided for informational purposes only and is not intended as investment, legal, or tax advice. All data (including income, population, and eviction filings) are derived from third-party sources such as the U.S. Census Bureau, the Anti-Eviction Mapping Project, and the Los Angeles Superior Court, and are believed to be reliable but not guaranteed. Readers should verify all information independently before making any real estate or financial decisions. Past trends do not guarantee future performance."
+DISCLAIMER_2 = "Based on information from Vesta Plus MLS as of November 25, 2024. All data, including all measurements and calculations of area, is obtained from various sources and has not been, and will not be, verified by broker or MLS. All information should be independently reviewed and verified for accuracy."
+DRE_NUM      = "CA DRE #01942714"
 # --- NORMALIZATION + GUARDS -----------------------------------------------
 from dash.exceptions import PreventUpdate
 
