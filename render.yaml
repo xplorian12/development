@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: development
+    env: python
+    plan: starter
+    buildCommand: |
+      pip install -r requirements.txt
+      git lfs install --local
+      git lfs fetch --all
+      git lfs checkout
+    startCommand: gunicorn index:server
+    autoDeploy: true
