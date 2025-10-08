@@ -1,6 +1,7 @@
 # app.py — SUMMARY as a dropdown "city" with an empty page, Carto tiles, sticky legend, hover HTML
 import os
 import numpy as np
+import json
 import pandas as pd
 from statsmodels.nonparametric.smoothers_lowess import lowess
 from dash import Dash, html, dcc, Output, Input
@@ -479,6 +480,15 @@ def update_city_note(city, tab_value):
     ])
 
 # ------------------ Chart callbacks (return blanks when SUMMARY) ------------------
+def _load_bundle(city, name):
+    path = os.path.join("assets", "prebuilt", f"{name}_{city}.json")
+    if not os.path.exists(path):
+        return None
+    with open(path, "r") as f:
+        return json.load(f)
+
+def _json_to_fig(obj):
+    return go.Figure(obj)
 @app.callback(
     Output("p1","figure"), Output("p1_2","figure"), Output("p2","figure"),
     Output("p3","figure"), Output("p4","figure"), Output("p5","figure"),
@@ -489,7 +499,13 @@ def update_quarterly(city, tab):
     # only compute when a real city is selected AND the Prices tab is visible
     if city == "SUMMARY" or tab != "prices_tab":
         raise PreventUpdate
-
+    bundle = _load_bundle(city, "quarterly")
+    if bundle:
+        figs = [(_json_to_fig(j) if j is not None else go.Figure()) for j in bundle]
+        # ensure length 9
+        while len(figs) < 9:
+            figs.append(go.Figure())
+        return tuple(figs[:9])
     df = qtr[qtr["CITY_KEY"] == city].copy()  # (sorted once at load; see note below)
     f1   = line_with_loess(df, "period_label", "SP", "Median Sale Price (SP)")
     f1_2 = line_with_loess(df, "period_label", "count", "Sale Count")
